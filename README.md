@@ -161,9 +161,7 @@ ___
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiVGVlbm8iLCJlbWFpbCI6InRpbm8wODQ3OUBnbWFpbC5jb20iLCJpYXQiOjE2ODY3NjY0MjYsImV4cCI6MTY4OTM1ODQyNn0.ZOqBCj_B8so7b7bt3qO9drDwVrcGrieNYPPEh4bHJH4",
-  "status": "Login Successfully",
-  "detail": "user: Teeno"
+  "status": "Success"
 }
 ```
 ___
