@@ -470,28 +470,34 @@ app.get('/runpy', async (req, res) => {
 })
 
 app.post("/model", file2model.single('file'), async (req, res) => {
-  const soundFile = req.file
-  const { username } = req.body
-  console.log('Username:', username)
-  console.log('Sound file:', soundFile)
+  try{
+    
+    const soundFile = req.file
+    const { username } = req.body
+    console.log('Username:', username)
+    await console.log('Sound file:', soundFile)
 
-  const modelFile = 'Predict.py'
-  let predicted = ''
+    const modelFile = 'Predict.py'
+    let predicted = ''
 
-  if(!soundFile){ return res.status(400).send("File not Found") }
+    if(!soundFile){ return res.status(400).send("File not Found") }
 
-  const model = await spawn('python', [__dirname + "/model/" + modelFile])
+    const model = await spawn('python', [__dirname + "/model/" + modelFile])
 
-  model.stdout.on('data', function (data) {
-    predicted = data.toString()
-  })
+    model.stdout.on('data', function (data) {
+      predicted = data.toString()
+    })
 
-  model.on('close', (code) => {
-    if(code !== 0){
-      return res.status(500).send(`Python script exited with code ${code}`)
-    }
-    return res.status(200).send(predicted)
-  })
+    model.on('close', (code) => {
+      if(code !== 0){
+        return res.status(500).send(`Python script exited with code ${code}`)
+      }
+      return res.status(200).send(predicted)
+    })
+  } catch(error) {
+    console.log(error)
+    return res.status(500).send("Internal Server Error, Error:", error)
+  }
 })
 
 //-----------------------------------------------------------
