@@ -1,0 +1,18 @@
+const decode = jwtdecoder(token)
+      const expDate = new Date(decode.exp * 1000)
+      console.log(expDate)
+      const currentDate = new Date()
+      const timeDiff = expDate.getTime() - currentDate.getTime()
+      let seconds = Math.floor(timeDiff / 1000)
+      let minutes = Math.floor(seconds / 60)
+      let hours = Math.floor(minutes / 60)
+      const days = Math.floor(hours / 24)
+      seconds %= 60
+      minutes %= 60
+      hours %= 24
+      if(currentDate > expDate){
+        console.log("Token Expired")
+        return res.status(401).send("Token Expired. Please re-login or get new \"Token\"")
+      }
+      console.log(days + " Day(s) " + hours + " Hour(s) " + minutes + " Minute(s) " + seconds + " Second(s) " + "before token expire")
+      return res.status(200).send(decode)

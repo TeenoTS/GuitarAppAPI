@@ -4,9 +4,15 @@ const cors = require('cors')
 // const admin = require('firebase-admin')
 const { initializeApp } = require('firebase/app')
 const { getDatabase, set, update, remove, ref, query, orderByChild, equalTo, get } = require('firebase/database')
+const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage')
+const multer = require('multer')
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const jwtdecoder = require('jwt-decode')
+const mime = require('mime')
+const fs = require('fs')
+const { spawn, exec } = require('child_process')
+const path = require('path')
 
 const app = express()
 const PORT = 8080
@@ -16,7 +22,7 @@ const expTime = "30d"
 app.use(cors())
 app.use(express.json())
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 
 const firebaseConfig = {
   apiKey: "AIzaSyDnE11NVCpch1SAzWuVipUYUyrx74hYSvw",
@@ -33,22 +39,125 @@ const firebaseConfig = {
 // const database = admin.firestore();
 const firebase = initializeApp(firebaseConfig)
 const database = getDatabase(firebase)
-
-app.get("/", (req, res) => {
-  res.status(200).send('Welcome to GT-App API')
+const storage = getStorage(firebase)
+// const upload = multer({ dest: 'uploads/' })
+const uploadFile = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './files/')
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname)
+    }
+  })
 })
 
-app.get("/user/:token",(req, res) => {
+const file2model = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './UserChordSound/')
+    },
+    filename: function (req, file, cb) {
+      cb(null, 'userSound' + path.extname(file.originalname))
+    }
+  })
+})
+
+if (!fs.existsSync('./UserChordSound')) {
+  fs.mkdirSync('./UserChordSound');
+}
+
+if (!fs.existsSync('./files')) {
+  fs.mkdirSync('./files')
+}
+
+const newID = async () => {
+  var newerID = 0
+  await get(ref(database, 'userID/ID'))
+    .then((snapshot) => {
+      const id = snapshot.val() + 1
+      update(ref(database, 'userID'), {
+        ID: id
+      })
+      newerID = id
+    })
+    .catch((err) => {
+      newerID = -1
+    })
+  return newerID
+}
+
+app.post('/upload', uploadFile.single('file'), async (req, res) => {
+  console.log("upload activated")
+  try {
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded or empty file' });
+    }
+    else {
+
+    }
+    console.log(file)
+    // const storagePath = 'path/to/file/' + file.originalname;
+    // const storageReference = storageRef(getStorage(), storagePath);
+    // await uploadBytes(storageReference, file.buffer);
+
+    return res.status(200).send({
+      status: "File uploaded successfully",
+      filename: file.filename,
+      mimetype: file.mimetype
+    })
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    res.status(500).json({ error: 'Error uploading file' })
+  }
+})
+
+app.get("/", async (req, res) => {
+  // const id = await newID()
+  // console.log("newID: " + id)
+  // res.status(200).send('Welcome to GT-App API')
+  res.sendFile(__dirname + '/index.html');
+})
+
+app.get("/getfile/:filename", (req, res) => {
+  const filename = req.params.filename
+  const filePath = __dirname + '/uploads/' + filename + '.jpg'
+  console.log(filePath)
+  return res.sendFile(filePath)
+})
+
+app.get("/user/:token", (req, res) => {
   const token = req.params.token
-  if(!token){
+  if (!token) {
     return res.status(401).send({
       status: "Authentication error",
       detail: "No token or token invalid"
     })
-  }else{
+  } else {
     try {
-      const decode = jwtdecoder(token)
-      return res.status(200).send(decode)
+      const token_data = jwtdecoder(token)
+      const userRef = ref(database, "user");
+      const emailQuery = query(userRef, orderByChild("email"), equalTo(token_data.email));
+
+      get(emailQuery)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const user = snapshot.val()
+            //console.log("emailQuery: " + emailQuery)
+            console.log("snapshot: ", user)
+            const userData = Object.values(user).find(user => user.email === token_data.email)
+
+            return res.status(200).send({ token_data, userData })
+          }
+          else {
+            return res.status(401).send({
+              status: "Authentication Failed",
+              detail: "Email not exists"
+            })
+          }
+        })
     } catch (err) {
       return res.status(401).send({
         status: "Authentication error",
@@ -58,21 +167,21 @@ app.get("/user/:token",(req, res) => {
   }
 })
 
-app.post("/user",(req, res) => {
-  try{
+app.post("/user", async (req, res) => {
+  try {
     const { name, email, password } = req.body
-    if(!name || !email || !password){
+    if (!name || !email || !password) {
       return res.status(400).send({
         status: "Data required",
         details: "Required data: name, email, password"
       })
     }
-    
+
     const userRef = ref(database, "user");
     const emailQuery = query(userRef, orderByChild("email"), equalTo(email))
-  
+
     get(emailQuery)
-      .then((snapshot) => {
+      .then(async (snapshot) => {
         //console.log("emailQuery: " + emailQuery)
         console.log("snapshot: ", snapshot.val())
         if (snapshot.exists()) {
@@ -81,8 +190,10 @@ app.post("/user",(req, res) => {
             details: "-"
           });
         } else {
+          const id = await newID()
           set(ref(database, 'user/' + name), {
-            name: name, 
+            id: id,
+            name: name,
             email: email,
             password: password,
             memorize_chord: {
@@ -101,22 +212,22 @@ app.post("/user",(req, res) => {
               advance: 0
             }
           })
-          .then((result) => {
-            return res.status(200).send({
-              status: "Success",
-              details: result
+            .then((result) => {
+              return res.status(200).send({
+                status: "Success",
+                details: result
+              })
             })
-          })
-          .catch((err) => {
-            console.log("err: " + err)
-            return res.status(500).send({
-              status: "API Error",
-              details: "Register Error"
+            .catch((err) => {
+              console.log("err: " + err)
+              return res.status(500).send({
+                status: "API Error",
+                details: "Register Error"
+              })
             })
-          })
         }
       })
-  } catch(err){
+  } catch (err) {
     console.log(err)
     return res.status(500).send({
       status: "API Error",
@@ -125,16 +236,16 @@ app.post("/user",(req, res) => {
   }
 })
 
-app.put("/user",(req, res) => {
+app.put("/user", (req, res) => {
   const { name, token } = req.body
-  if(!name, !token){
+  if (!name, !token) {
     return res.status(400).send({
       status: "Data required",
       details: "Required data: name, token"
     })
   }
-  
-  try{
+
+  try {
     const token_data = jwtdecoder(token)
     //console.log("decoded token: ", token_data)
     const userRef = ref(database, "user");
@@ -147,8 +258,8 @@ app.put("/user",(req, res) => {
           //console.log("emailQuery: " + emailQuery)
           console.log("snapshot: ", user)
           const userData = Object.values(user).find(user => user.email === token_data.email)
-          
-          set(ref(database, 'user/' + name),{
+
+          set(ref(database, 'user/' + name), {
             name: name,
             email: userData.email,
             password: userData.password,
@@ -156,37 +267,37 @@ app.put("/user",(req, res) => {
             listening_chord: userData.listening_chord,
             playing_chord: userData.playing_chord
           })
-          .then((result) => {
-            remove(ref(database, 'user/' + userData.name))
-            const token = jwt.sign(
-              {
-                name: name,
-                email: token_data.email
-              },TOKEN_KEY,{
+            .then((result) => {
+              remove(ref(database, 'user/' + userData.name))
+              const token = jwt.sign(
+                {
+                  name: name,
+                  email: token_data.email
+                }, TOKEN_KEY, {
                 expiresIn: expTime
               }
-            )
-            return res.status(200).send({
-              token,
-              status: "Success",
-              details: result
+              )
+              return res.status(200).send({
+                token,
+                status: "Success",
+                details: result
+              })
             })
-          })
-          .catch((err) => {
-            console.log("err: " + err)
-            return res.status(500).send({
-              status: "API Error",
-              details: "Register Error"
+            .catch((err) => {
+              console.log("err: " + err)
+              return res.status(500).send({
+                status: "API Error",
+                details: "Register Error"
+              })
             })
+        } else {
+          return res.status(401).send({
+            status: "Authentication Failed",
+            detail: "Email not exists"
           })
-      } else {
-        return res.status(401).send({
-          status: "Authentication Failed",
-          detail: "Email not exists"
-        })
-      }
-    })
-    
+        }
+      })
+
   } catch (err) {
     console.log(err)
     return res.status(500).send({
@@ -196,18 +307,18 @@ app.put("/user",(req, res) => {
   }
 })
 
-app.post("/login",(req, res) => {
+app.post("/login", (req, res) => {
   const { email, password } = req.body
-  if(!email || !password){
+  if (!email || !password) {
     return res.status(400).send({
       status: "Data required",
       details: "Required data: email, password"
     })
   }
-  try{
+  try {
     const userRef = ref(database, "user");
     const emailQuery = query(userRef, orderByChild("email"), equalTo(email));
-  
+
     get(emailQuery)
       .then((snapshot) => {
         if (snapshot.exists()) {
@@ -216,20 +327,20 @@ app.post("/login",(req, res) => {
           console.log("snapshot: ", user)
           const userData = Object.values(user).find(user => user.email === email)
           console.log("user data: ", userData)
-          if(userData.password != password){
+          if (userData.password != password) {
             return res.status(401).send({
               status: "Authentication Failed",
               detail: "Password incorrect"
             })
           }
-          else{
+          else {
             const token = jwt.sign(
               {
                 name: userData.name,
                 email: email
-              },TOKEN_KEY,{
-                expiresIn: expTime
-              }
+              }, TOKEN_KEY, {
+              expiresIn: expTime
+            }
             )
             return res.status(200).send({
               token,
@@ -237,14 +348,14 @@ app.post("/login",(req, res) => {
               detail: "user: " + userData.name
             })
           }
-      } else {
-        return res.status(401).send({
-          status: "Authentication Failed",
-          detail: "Email not exists"
-        })
-      }
-    })
-  } catch(err){
+        } else {
+          return res.status(401).send({
+            status: "Authentication Failed",
+            detail: "Email not exists"
+          })
+        }
+      })
+  } catch (err) {
     console.log(err)
     return res.status(500).send({
       status: "API Error",
@@ -253,34 +364,36 @@ app.post("/login",(req, res) => {
   }
 })
 
-app.post("/score/:mode/:difficulty",(req, res) => {
+app.post("/score/:mode/:difficulty", (req, res) => {
   const mode = req.params.mode
   const difficulty = req.params.difficulty
-  console.log(mode)
+  //console.log(difficulty)
+  //console.log(mode)
   const { token, score } = req.body
+  //console.log(req.body)
 
-  if(!mode || !difficulty || !token || !score){
+  if (!mode || !difficulty || !token || !score) {
     return res.status(400).send({
       status: "Data require",
       detail: "required: mode, difficulty, token, score"
     })
   }
 
-  if(mode != "listening_chord" && mode != "memorize_chord" && mode != "playing_chord"){
+  if (mode != "listening_chord" && mode != "memorize_chord" && mode != "playing_chord") {
     return res.status(400).send({
       status: "Mode invalid",
       details: "mode: listening_chord, memorize_chord, playing_chord"
     })
   }
 
-  if(difficulty != "beginner" && difficulty != "intermediate" && difficulty != "advance"){
+  if (difficulty != "beginner" && difficulty != "intermediate" && difficulty != "advance") {
     return res.status(400).send({
       status: "Difficulty invalid",
       details: "difficulty: beginner, intermediate, advance"
     })
   }
 
-  try{
+  try {
     const token_data = jwtdecoder(token)
     const userRef = ref(database, "user");
     const emailQuery = query(userRef, orderByChild("email"), equalTo(token_data.email));
@@ -290,25 +403,25 @@ app.post("/score/:mode/:difficulty",(req, res) => {
         if (snapshot.exists()) {
           const user = snapshot.val()
           //console.log("emailQuery: " + emailQuery)
-          console.log("snapshot: ", user)
+          //console.log("snapshot: ", user)
           const userData = Object.values(user).find(user => user.email === token_data.email)
 
-          if(difficulty == "beginner"){
-            set(ref(database, 'user/' + token_data.name + '/' + mode),{
+          if (difficulty == "beginner") {
+            set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: score,
               intermediate: userData[mode].intermediate,
               advance: userData[mode].advance,
             })
           }
-          else if(difficulty == "intermediate"){
-            set(ref(database, 'user/' + token_data.name + '/' + mode),{
+          else if (difficulty == "intermediate") {
+            set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: userData[mode].beginner,
               intermediate: score,
               advance: userData[mode].advance,
             })
           }
-          else if(difficulty == "advance"){
-            set(ref(database, 'user/' + token_data.name + '/' + mode),{
+          else if (difficulty == "advance") {
+            set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: userData[mode].beginner,
               intermediate: userData[mode].intermediate,
               advance: score,
@@ -318,14 +431,14 @@ app.post("/score/:mode/:difficulty",(req, res) => {
             status: "Success",
             details: "-"
           })
-      } else {
-        return res.status(401).send({
-          status: "Authentication Failed",
-          detail: "Email not exists"
-        })
-      }
-    })
-    
+        } else {
+          return res.status(401).send({
+            status: "Authentication Failed",
+            detail: "Email not exists"
+          })
+        }
+      })
+
   } catch (err) {
     console.log(err)
     return res.status(500).send({
@@ -333,6 +446,52 @@ app.post("/score/:mode/:difficulty",(req, res) => {
       details: "Unknown Error"
     })
   }
+})
+
+app.get('/runpy', async (req, res) => {
+  const { chordName, chordFile } = req.body
+  const modelFile = 'testPy.py'
+  let dataToSend = ''
+
+  const pyProcess = await spawn('python', [__dirname + "/model/" + modelFile, chordName, chordFile])
+
+  pyProcess.stdout.on('data', function (data) {
+    dataToSend += data.toString()
+  })
+
+  // res.status(200).send(__dirname + "model/" + modelFile)
+  pyProcess.on('close', (code) => {
+    if(code !== 0) {
+      return res.status(500).send(`Python script exited with code ${code}`)
+    }
+    // console.log('Data received from script')
+    return res.status(200).send(dataToSend)
+  })
+})
+
+app.post("/model", file2model.single('file'), async (req, res) => {
+  const soundFile = req.file
+  const { username } = req.body
+  console.log('Username:', username)
+  console.log('Sound file:', soundFile)
+
+  const modelFile = 'Predict.py'
+  let predicted = ''
+
+  if(!soundFile){ return res.status(400).send("File not Found") }
+
+  const model = await spawn('python', [__dirname + "/model/" + modelFile])
+
+  model.stdout.on('data', function (data) {
+    predicted = data.toString()
+  })
+
+  model.on('close', (code) => {
+    if(code !== 0){
+      return res.status(500).send(`Python script exited with code ${code}`)
+    }
+    return res.status(200).send(predicted)
+  })
 })
 
 //-----------------------------------------------------------
