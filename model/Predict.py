@@ -21,8 +21,12 @@ path = dirname + r'\..\UserChordSound\userSound.wav'
 # Test Path
 # path = 'D:\\Music\\Dataset\\Guitar Chord Dataset V2\\Chord Gm\\Gm (G form AC2) Pick.wav'
 
-sound_feature = feature2model(path)
-model_ansPredicted = model.predict(sound_feature[None,:,:,None]).argmax()
-# print('Model Answer:', chord_name[model_ansPredicted], '['+str(model_ansPredicted)+']')
-print(chord_name[model_ansPredicted])
+if os.path.exists(path):
+    sound_feature = feature2model(path)
+    model_ansPredicted = model.predict(sound_feature[None,:,:,None]).argmax()
+    # print('Model Answer:', chord_name[model_ansPredicted], '['+str(model_ansPredicted)+']')
+    print(chord_name[model_ansPredicted])
+
+else:
+    print('File not found at:', path)
 
