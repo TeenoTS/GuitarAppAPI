@@ -54,7 +54,7 @@ const uploadFile = multer({
 
 const installPythonLibraries = () => {
   return new Promise((resolve, reject) => {
-      const installProcess = spawn('pip', ['install', 'tensorflow', 'librosa', 'numpy'])
+      const installProcess = spawn('python', ['-m', 'pip', 'install', 'tensorflow', 'librosa', 'numpy'])
 
       installProcess.on('close', (code) => {
           if (code === 0) {
