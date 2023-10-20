@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <title>Guitar Trainer App API</title>
+        <style>
+        body {
+            height: 200px;
+            background: linear-gradient(to right, #ffd1dc, #ffb6c1, #ffa07a, #ffd700, #add8e6, #b0e0e6, #98fb98);
+            background-size: 1400% 100%;
+            animation: rainbow 20s linear infinite;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50%; 
+        }
+        .fa {
+            padding: 20px;
+            font-size: 30px;
+            width: 30px;
+            text-align: center;
+            text-decoration: none;
+            margin: 5px 2px;
+            border-radius: 50%;
+        }
+        .fa:hover {
+            opacity: 0.7;
+            animation: wiggle 2s linear infinite;
+        }
+        .fa-facebook {
+            background: #3B5998;
+            color: white;
+        }
+        .fa-instagram {
+            background: #125688;
+            color: white;
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes wiggle {
+        0%, 7% {
+            transform: rotateZ(0);
+        }
+        15% {
+            transform: rotateZ(-15deg);
+        }
+        20% {
+            transform: rotateZ(10deg);
+        }
+        25% {
+            transform: rotateZ(-10deg);
+        }
+        30% {
+            transform: rotateZ(6deg);
+        }
+        35% {
+            transform: rotateZ(-4deg);
+        }
+        40%, 100% {
+            transform: rotateZ(0);
+        }
+        }
+    </style>
+    </head>
+    <body>
+        <h1 class="container shake">Welcome to Guitar Practice Application API</h1>
+        <div class="container">
+            <a href="https://www.facebook.com/Thitiphat.Soisungnoen/" class="fa fa-facebook"></a>
+            <a href="https://www.instagram.com/teeno_ts/" class="fa fa-instagram"></a>
+        </div>
+    </body>
+</html>
