@@ -60,7 +60,7 @@ const installPythonLibraries = () => {
       if (code === 0) {
         resolve()
       } else {
-        reject('Failed to install Python libraries')
+        reject('Failed to install Python libraries, Why?')
       }
     })
 

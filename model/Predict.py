@@ -1,9 +1,10 @@
-import os
-import tensorflow as tf
-import librosa
-import numpy as np
 
 try: 
+    import os
+    import tensorflow as tf
+    import librosa
+    import numpy as np
+
     dirname = os.path.dirname(os.path.abspath(__file__))
 
     chord_name = ['Chord Am', 'Chord A', 'Chord C', 'Chord Bm', 'Chord Bbm', 'Chord B', 'Chord Cm', 'Chord C#m', 'Chord Bb', 'Chord C#', 'Chord Em', 'Chord D', 'Chord F', 'Chord Fm', 'Chord D#', 'Chord E', 'Chord F#m', 'Chord F#', 'Chord D#m', 'Chord Dm', 'Chord G#m', 'Chord G#', 'Chord G', 'Chord Gm']
