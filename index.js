@@ -54,32 +54,30 @@ const uploadFile = multer({
 
 const installPythonLibraries = () => {
   return new Promise((resolve, reject) => {
-    const installProcess = spawn('pip', ['install', 'tensorflow', 'librosa', 'numpy'])
+      const installProcess = spawn('pip', ['install', 'tensorflow', 'librosa', 'numpy'])
 
-    installProcess.on('close', (code) => {
-      if (code === 0) {
-        resolve()
-      } else {
-        reject('Failed to install Python libraries, Why?')
-      }
-    })
+      installProcess.on('close', (code) => {
+          if (code === 0) {
+              resolve()
+          } else {
+              reject('Failed to install Python libraries. Why?')
+          }
+      })
 
-    installProcess.on('error', (err) => {
-      reject(err)
-    })
+      installProcess.on('error', (err) => {
+          reject('compile error:', err)
+      })
   })
 }
 
-const initialize = async () => {
-  try {
-    await installPythonLibraries()
-    console.log("Python library installed")
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-initialize()
+// Call the installation function before executing the model
+installPythonLibraries()
+  .then(() => {
+    console.log('Python library installed.')
+  })
+  .catch((error) => {
+    console.error('An error occurred while installing Python libraries:', error)
+  })
 
 const file2model = multer({
   storage: multer.diskStorage({
