@@ -1,4 +1,4 @@
-# API ในการจัดการระบบฐานข้อมูลของสินทรัพย์
+https://guitartrainerappapi.onrender.com# API ในการจัดการระบบฐานข้อมูลของสินทรัพย์
 
 ## API ทั้งหมด
 1. การร้องขอข้อมูลผู้ใช้โดยใช้ token ("/user/:token" [GET] )
@@ -169,103 +169,81 @@ ___
 ```
 ___
 
-> ## **6. การส่งข้อมูลมาบันทึกบนฐานข้อมูล ("/upload" [POST])**
-> **/score" [POST]**
+> ## **6. การส่งข้อมูลมาบันทึกบนฐานข้อมูล**
+> **/upload [POST]**
 
 ### ข้อมูลที่ต้องส่งมา 
 - **method** : POST
 - **body** (ส่งมาด้วย Formdata)
-  - token : ไฟล์เสียงที่ต้องการอัปโหลดลงฐานข้อมูล
+  - file : ไฟล์เสียงที่ต้องการอัปโหลดลงฐานข้อมูล
 
 ### Response ต่างๆ
 |HTTP Code|status|Data Response(Variable)|Status Explain|
 |:----:|:----:|:----:|:----:|
-|200|Success|-|-|
-|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
-|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
-|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
-|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
-|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+|200|File uploaded successfully|filename, mimetype|แสดงสถานะอัปโหลดสำเร็จ และคืนค่าชื่อและประเภทของไฟล์ที่อัปโหลด|
+|400|No file uploaded or empty file|-|ไม่มีไฟล์ใดๆส่งมาเมื่อ API ถูกเรียก|
+|500|Error uploading file|-|มีข้อผิดพลาดบางประการในระบบ|
 
 ### ตัวอย่าง Data Response 
 
-#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+#### URL: http://gt-app.teenots.repl.co/upload
 
 #### Responce: 
 
 ```json
 {
-  "status": "Success"
+  "status": "File uploaded successfully",
+  "filename": "1698155078040-PianoNote.png",
+  "mimetype": "image/png"
 }
 ```
 ___
 
-> ## **7. การร้องขอไฟล์บนฐานข้อมูล ("/getfile/:filename" [GET])**
-> **/score" [POST]**
+> ## **7. การร้องขอไฟล์บนฐานข้อมูล**
+> **/getfile/:filename [GET]**
 
 ### ข้อมูลที่ต้องส่งมา
-- **method** : POST
+- **method** : GET
 - **query**
-  - mode: อีเมลล์ของผู้ใช้งาน(listening_chord, memorize_chord, playing_chord)
-    - difficulty: ระดับความยากในโหมดนั้นๆ(beginner, intermediate, advance)
-- **body**
-  - token : โทเค็นระบุตัวตนผู้ที่กำลังเข้าใช้งาน
-  - score : คะแนนในโหมดนั้นๆ
+  - filename: ชื่อของไฟล์ที่บันทึกอยู่ในฐานข้อมูล
 
 ### Response ต่างๆ
 |HTTP Code|status|Data Response(Variable)|Status Explain|
 |:----:|:----:|:----:|:----:|
-|200|Success|-|-|
-|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
-|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
-|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
-|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
-|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+|200|-|[Requested File]|ส่งคืนไฟล์ที่ทำการร้องขอ|
+|404|File Not Found|-|ไม่พบไฟล์ในระบบ|
 
 ### ตัวอย่าง Data Response 
 
-#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+#### URL: http://gt-app.teenots.repl.co/getfile/1698155078040-PianoNote.png
 
 #### Responce: 
 
-```json
-{
-  "status": "Success"
-}
-```
+****แสดงหรือดาวน์โหลดรูป/ไฟล์ที่ระบุ***
 ___
 
-> ## **8. การร้องขอการเรียกใช้โมเดลในการจำแนกเสียงคอร์ดกีต้าร์ ("/model" [POST])**
-> **/score" [POST]**
+> ## **8. การร้องขอการเรียกใช้โมเดลในการจำแนกเสียงคอร์ดกีต้าร์**
+> **/model" [POST]**
 
 ### ข้อมูลที่ต้องส่งมา
 - **method** : POST
-- **query**
-  - mode: อีเมลล์ของผู้ใช้งาน(listening_chord, memorize_chord, playing_chord)
-    - difficulty: ระดับความยากในโหมดนั้นๆ(beginner, intermediate, advance)
-- **body**
-  - token : โทเค็นระบุตัวตนผู้ที่กำลังเข้าใช้งาน
-  - score : คะแนนในโหมดนั้นๆ
+- **body** (ส่งมาด้วย Formdata)
+  - file : ไฟล์เสียงที่ต้องการอัปโหลดลงฐานข้อมูล
 
 ### Response ต่างๆ
 |HTTP Code|status|Data Response(Variable)|Status Explain|
 |:----:|:----:|:----:|:----:|
-|200|Success|-|-|
-|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
-|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
-|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
-|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
-|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+|200|-|predicted|ส่งคืนชื่อคอร์ดที่โมเดลทำการทำนาย|
+|500|Python script exited with code xxx|-|ไฟล์ python ทำงานผิดพลาด|
+|500|Internal Server Error, Error: [error]|error|แสดงผล error ที่เกิดขึ้นในระบบ|
 
 ### ตัวอย่าง Data Response 
 
-#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+#### URL: http://gt-app.teenots.repl.co/model
 
 #### Responce: 
 
 ```json
-{
-  "status": "Success"
-}
+Chord C
 ```
 ___
