@@ -79,6 +79,18 @@ const uploadFile = multer({
 //     console.error('An error occurred while installing Python libraries:', error)
 //   })
 
+const listFilesInPath = (directoryPath, callback) => {
+  fs.readdir(directoryPath, (err, files) => {
+    if (err) {
+      callback(err, null)
+    } else {
+      // const fileList = files.map(file => path.join(directoryPath, file))
+      const fileList = files.map(file => path.basename(file))
+      callback(null, fileList)
+    }
+  })
+}
+
 const file2model = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -488,7 +500,7 @@ app.get('/runpy', async (req, res) => {
 
   // res.status(200).send(__dirname + "model/" + modelFile)
   pyProcess.on('close', (code) => {
-    if(code !== 0) {
+    if (code !== 0) {
       return res.status(500).send(`Python script exited with code ${code}`)
     }
     // console.log('Data received from script')
@@ -497,8 +509,8 @@ app.get('/runpy', async (req, res) => {
 })
 
 app.post("/model", file2model.single('file'), async (req, res) => {
-  try{
-    
+  try {
+
     const soundFile = req.file
     const { username } = req.body
     console.log('Username:', username)
@@ -507,7 +519,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
     const modelFile = 'Predict.py'
     let predicted = ''
 
-    if(!soundFile){ return res.status(400).send("File not Found") }
+    if (!soundFile) { return res.status(400).send("File not Found") }
 
     const model = await spawn('python', [__dirname + "/model/" + modelFile])
 
@@ -516,15 +528,38 @@ app.post("/model", file2model.single('file'), async (req, res) => {
     })
 
     model.on('close', (code) => {
-      if(code !== 0){
+      if (code !== 0) {
         return res.status(500).send(`Python script exited with code ${code}`)
       }
       return res.status(200).send(predicted)
     })
-  } catch(error) {
+  } catch (error) {
     console.log(error)
     return res.status(500).send("Internal Server Error, Error:", error)
   }
+})
+
+//------- Endpoint for testing with cloud platform ----------
+
+app.get("/listFile",async (req, res) => {
+  const { reqPath } = req.body
+  let searchPath = __dirname
+  let output = ""
+  console.log(searchPath)
+  if(reqPath){
+    searchPath = searchPath + reqPath
+  }
+  const path = __dirname
+  console.log(path)
+  console.log(searchPath)
+  await listFilesInPath(searchPath, (err, fileList) => {
+    if (err) {
+      res.status(500).send({searchPath, Response: "Path Error"})
+    } else {
+      res.status(200).send({searchPath, fileList})
+    }
+  })
+  // res.send(searchPath)
 })
 
 //-----------------------------------------------------------
