@@ -20,7 +20,8 @@ try:
 
     # Used Path
     # path = 'D:\\About the study\\Project\\Guiter Chord Recognition\\Backend\\GT-APP-API\\UserChordSound\\userSound.wav'
-    path = dirname + r'\..\UserChordSound\userSound.wav'
+    # path = dirname + r'\..\UserChordSound\userSound.wav'
+    path = dirname + r'/../UserChordSound/userSound.wav'
     # Test Path
     # path = 'D:\\Music\\Dataset\\Guitar Chord Dataset V2\\Chord Gm\\Gm (G form AC2) Pick.wav'
 
