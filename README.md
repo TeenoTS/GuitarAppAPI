@@ -1,11 +1,14 @@
 # API ในการจัดการระบบฐานข้อมูลของสินทรัพย์
 
 ## API ทั้งหมด
-1. การร้องขอข้อมูลผู้ใช้โดยใช้ token ("/user" [GET] )
+1. การร้องขอข้อมูลผู้ใช้โดยใช้ token ("/user/:token" [GET] )
 2. การเพิ่มข้อมูลผู้ใช้ใหม่เข้าสู่ฐานข้อมูล ("/user" [POST] )
 3. การร้องขอการแก้ไขข้อมูลผู้ใช้เดิม ("/user" [PUT] )
 4. การร้องขอการเข้าสู่ระบบ ("/login" [POST] )
-5. การร้องขอการแก้ไขคะแนน ("/score" [POST] )
+5. การร้องขอการแก้ไขคะแนน ("/score/:mode/:difficulty" [POST] )
+6. การส่งข้อมูลมาบันทึกบนฐานข้อมูล ("/upload" [POST])
+7. การร้องขอไฟล์บนฐานข้อมูล ("/getfile/:filename" [GET])
+8. การร้องขอการเรียกใช้โมเดลในการจำแนกเสียงคอร์ดกีต้าร์ ("/model" [POST])
 
 # คำอธิบาย API ต่างๆ
 > ## **1. การร้องขอข้อมูลผู้ใช้โดยใช้ token**
@@ -132,6 +135,107 @@ ___
 ___
 
 > ## **5. การร้องขอการแก้ไขคะแนน**
+> **/score" [POST]**
+
+### ข้อมูลที่ต้องส่งมา
+- **method** : POST
+- **query**
+  - mode: อีเมลล์ของผู้ใช้งาน(listening_chord, memorize_chord, playing_chord)
+    - difficulty: ระดับความยากในโหมดนั้นๆ(beginner, intermediate, advance)
+- **body**
+  - token : โทเค็นระบุตัวตนผู้ที่กำลังเข้าใช้งาน
+  - score : คะแนนในโหมดนั้นๆ
+
+### Response ต่างๆ
+|HTTP Code|status|Data Response(Variable)|Status Explain|
+|:----:|:----:|:----:|:----:|
+|200|Success|-|-|
+|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
+|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
+|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
+|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
+|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+
+### ตัวอย่าง Data Response 
+
+#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+
+#### Responce: 
+
+```json
+{
+  "status": "Success"
+}
+```
+___
+
+> ## **6. การส่งข้อมูลมาบันทึกบนฐานข้อมูล ("/upload" [POST])**
+> **/score" [POST]**
+
+### ข้อมูลที่ต้องส่งมา 
+- **method** : POST
+- **body** (ส่งมาด้วย Formdata)
+  - token : ไฟล์เสียงที่ต้องการอัปโหลดลงฐานข้อมูล
+
+### Response ต่างๆ
+|HTTP Code|status|Data Response(Variable)|Status Explain|
+|:----:|:----:|:----:|:----:|
+|200|Success|-|-|
+|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
+|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
+|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
+|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
+|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+
+### ตัวอย่าง Data Response 
+
+#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+
+#### Responce: 
+
+```json
+{
+  "status": "Success"
+}
+```
+___
+
+> ## **7. การร้องขอไฟล์บนฐานข้อมูล ("/getfile/:filename" [GET])**
+> **/score" [POST]**
+
+### ข้อมูลที่ต้องส่งมา
+- **method** : POST
+- **query**
+  - mode: อีเมลล์ของผู้ใช้งาน(listening_chord, memorize_chord, playing_chord)
+    - difficulty: ระดับความยากในโหมดนั้นๆ(beginner, intermediate, advance)
+- **body**
+  - token : โทเค็นระบุตัวตนผู้ที่กำลังเข้าใช้งาน
+  - score : คะแนนในโหมดนั้นๆ
+
+### Response ต่างๆ
+|HTTP Code|status|Data Response(Variable)|Status Explain|
+|:----:|:----:|:----:|:----:|
+|200|Success|-|-|
+|400|Data Required|-|ข้อมูลไม่ถูกส่งมาหรือส่งมาไม่ครบถ้วน|
+|400|Mode invalid|-|ค่าในตัวแปร Mode ไม่ถูกต้อง|
+|400|Difficulty invalid|-|ค่าในตัวแปร Difficulty ไม่ถูกต้อง|
+|401|Authentication Failed|-|อีเมลล์ที่ส่งมาไม่มีอยู่ในระบบ|
+|500|API Error|-|มีข้อผิดพลาดบางประการในระบบ|
+
+### ตัวอย่าง Data Response 
+
+#### URL: http://gt-app.teenots.repl.co/score/memorize_chord/intermediate
+
+#### Responce: 
+
+```json
+{
+  "status": "Success"
+}
+```
+___
+
+> ## **8. การร้องขอการเรียกใช้โมเดลในการจำแนกเสียงคอร์ดกีต้าร์ ("/model" [POST])**
 > **/score" [POST]**
 
 ### ข้อมูลที่ต้องส่งมา
