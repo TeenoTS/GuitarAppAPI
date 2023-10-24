@@ -162,7 +162,7 @@ app.get("/", async (req, res) => {
 
 app.get("/getfile/:filename", (req, res) => {
   const filename = req.params.filename
-  const filePath = __dirname + '/uploads/' + filename + '.jpg'
+  const filePath = __dirname + '/files/' + filename
   console.log(filePath)
   return res.sendFile(filePath)
 })
