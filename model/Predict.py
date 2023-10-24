@@ -8,8 +8,8 @@ try:
     dirname = os.path.dirname(os.path.abspath(__file__))
 
     chord_name = ['Chord Am', 'Chord A', 'Chord C', 'Chord Bm', 'Chord Bbm', 'Chord B', 'Chord Cm', 'Chord C#m', 'Chord Bb', 'Chord C#', 'Chord Em', 'Chord D', 'Chord F', 'Chord Fm', 'Chord D#', 'Chord E', 'Chord F#m', 'Chord F#', 'Chord D#m', 'Chord Dm', 'Chord G#m', 'Chord G#', 'Chord G', 'Chord Gm']
-    # model = tf.keras.models.load_model(dirname + '\Guitar_Trainer_Model_V0.20.h55')
-    model = tf.keras.models.load_model(dirname + '/Guitar_Trainer_Model_V0.20.h55')
+    # model = tf.keras.models.load_model(dirname + '\Guitar_Trainer_Model_V0.20.h5')
+    model = tf.keras.models.load_model(dirname + '/Guitar_Trainer_Model_V0.20.h5')
 
     def feature2model(file_path):
         audio_data, sample_rate = librosa.load(file_path)
