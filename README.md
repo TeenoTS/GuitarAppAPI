@@ -244,6 +244,6 @@ ___
 #### Responce: 
 
 ```json
-Chord C
+C(MAJOR)
 ```
 ___

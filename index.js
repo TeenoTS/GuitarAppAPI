@@ -541,7 +541,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
 
 //------- Endpoint for testing with cloud platform ----------
 
-app.get("/listFile",async (req, res) => {
+app.get("/listfile", async (req, res) => {
   const { reqPath } = req.body
   let searchPath = __dirname
   let output = ""
@@ -560,6 +560,11 @@ app.get("/listFile",async (req, res) => {
     }
   })
   // res.send(searchPath)
+})
+
+app.get("/getusersound", async (req, res) => {
+  const userSoundPath = __dirname + "/UserChordSound/userSound.wav"
+  res.sendFile(userSoundPath)
 })
 
 //-----------------------------------------------------------
