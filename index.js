@@ -52,33 +52,6 @@ const uploadFile = multer({
   })
 })
 
-// const installPythonLibraries = () => {
-//   return new Promise((resolve, reject) => {
-//       const installProcess = spawn('python', ['-m', 'pip', 'install', 'tensorflow', 'librosa', 'numpy'])
-
-//       installProcess.on('close', (code) => {
-//           if (code === 0) {
-//               resolve()
-//           } else {
-//               reject('Failed to install Python libraries. Why?')
-//           }
-//       })
-
-//       installProcess.on('error', (err) => {
-//           reject('compile error:', err)
-//       })
-//   })
-// }
-
-// // Call the installation function before executing the model
-// installPythonLibraries()
-//   .then(() => {
-//     console.log('Python library installed.')
-//   })
-//   .catch((error) => {
-//     console.error('An error occurred while installing Python libraries:', error)
-//   })
-
 const listFilesInPath = (directoryPath, callback) => {
   fs.readdir(directoryPath, (err, files) => {
     if (err) {
@@ -102,12 +75,31 @@ const file2model = multer({
   })
 })
 
+const sound4detail = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './fileTemp/')
+    },
+    filename: function (req, file, cb) {
+      const currentDate = new Date();
+      const formattedDate = currentDate.getFullYear().toString() + 
+        ('0' + (currentDate.getMonth() + 1)).slice(-2) + 
+        ('0' + currentDate.getDate()).slice(-2)
+      cb(null, Date.now() + "-" + formattedDate + '-testerSound' + path.extname(file.originalname))
+    }
+  })
+})
+
 if (!fs.existsSync('./UserChordSound')) {
   fs.mkdirSync('./UserChordSound');
 }
 
 if (!fs.existsSync('./files')) {
   fs.mkdirSync('./files')
+}
+
+if (!fs.existsSync('./fileTemp')) {
+  fs.mkdirSync('./fileTemp')
 }
 
 const newID = async () => {
@@ -512,25 +504,27 @@ app.post("/model", file2model.single('file'), async (req, res) => {
   try {
 
     const soundFile = req.file
-    const { username } = req.body
-    console.log('Username:', username)
     await console.log('Sound file:', soundFile)
 
     const modelFile = 'Predict.py'
     let predicted = ''
 
     if (!soundFile) { return res.status(400).send("File not Found") }
-
+    
+    console.log("Model Activate")
     const model = await spawn('python', [__dirname + "/model/" + modelFile])
 
     model.stdout.on('data', function (data) {
+      console.log("Data:", data.toString() ,"Update")
       predicted = data.toString()
     })
 
     model.on('close', (code) => {
       if (code !== 0) {
+        console.log(`Python script exited with code ${code}`)
         return res.status(500).send(`Python script exited with code ${code}`)
       }
+      console.log("Model Predicted is:", predicted)
       return res.status(200).send(predicted)
     })
   } catch (error) {
@@ -562,9 +556,42 @@ app.get("/listfile", async (req, res) => {
   // res.send(searchPath)
 })
 
+app.get("/download", (req, res) => {
+  const { filepath } = req.body
+  if(!filepath){ return res.status(400).send("No file path") }
+  const targetFile = __dirname + "/" + filepath
+  console.log(targetFile)
+  res.download(targetFile)
+})
+
 app.get("/getusersound", async (req, res) => {
   const userSoundPath = __dirname + "/UserChordSound/userSound.wav"
   res.sendFile(userSoundPath)
+})
+
+app.post("/soundcheck", sound4detail.single('file'), async (req, res) => {
+  const file = req.file
+  let Response = ''
+
+  const pyProcess = await spawn('python', [__dirname + "/functionPy/soundDetail.py", file.filename])
+
+  pyProcess.stdout.on('data', function (data) {
+    Response += data.toString()
+  })
+
+  pyProcess.on('close', (code) => {
+    if (code !== 0) {
+      return res.status(500).send(`Python script exited with code ${code}`)
+    }
+    // console.log('Data received from script')
+    return res.status(200).send(Response)
+  })
+})
+
+app.post("/mimetype", sound4detail.single('file'), async (req, res) => {
+  const file = req.file
+  console.log(file)
+  res.status(200).send(file)
 })
 
 //-----------------------------------------------------------

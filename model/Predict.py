@@ -35,5 +35,5 @@ try:
         print('File not found at:', path)
 
 except Exception as error:
-    print(f"An error occurred: {error}")
+    print(f"An error occurred in the Predict.py file: {error}")
 
