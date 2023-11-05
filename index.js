@@ -510,7 +510,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
 
     try {
       const storage = getStorage(firebase)
-      const storagePath = 'modelUsingHistory/' + file.filename
+      const storagePath = 'modelUsingHistory/' + soundFile.filename
       const storageReference = storageRef(storage, storagePath)
       await uploadBytes(storageReference, fs.readFileSync(soundFile.path))
       const downloadURL = await getDownloadURL(storageReference)
