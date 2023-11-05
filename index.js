@@ -634,7 +634,7 @@ app.post('/testupload', uploadFile.single('file'), async (req, res) => {
     const storage = getStorage(firebase);
 
     // กำหนด path ใน Storage ที่คุณต้องการเก็บไฟล์
-    const storagePath = 'files/' + file.filename;
+    const storagePath = 'files/' + Date.now() + "-" + file.filename;
 
     // สร้าง reference ใน Storage
     const storageReference = storageRef(storage, storagePath);
