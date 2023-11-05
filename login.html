@@ -1,18 +1,15 @@
-const decode = jwtdecoder(token)
-      const expDate = new Date(decode.exp * 1000)
-      console.log(expDate)
-      const currentDate = new Date()
-      const timeDiff = expDate.getTime() - currentDate.getTime()
-      let seconds = Math.floor(timeDiff / 1000)
-      let minutes = Math.floor(seconds / 60)
-      let hours = Math.floor(minutes / 60)
-      const days = Math.floor(hours / 24)
-      seconds %= 60
-      minutes %= 60
-      hours %= 24
-      if(currentDate > expDate){
-        console.log("Token Expired")
-        return res.status(401).send("Token Expired. Please re-login or get new \"Token\"")
-      }
-      console.log(days + " Day(s) " + hours + " Hour(s) " + minutes + " Minute(s) " + seconds + " Second(s) " + "before token expire")
-      return res.status(200).send(decode)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <img src="https://firebasestorage.googleapis.com/v0/b/gt-app-c27ea.appspot.com/o/images%2FIMG_2174.jpg?alt=media&token=91a242df-8c3c-464b-af80-693965d7b379" alt="firebaseIMG" style="width:300px;height:300px;">
+  <video width="320" height="240" controls>
+    <source src="https://firebasestorage.googleapis.com/v0/b/gt-app-c27ea.appspot.com/o/fileTemp%2F1699120511627-20231105-testerSound.mp4?alt=media&token=207b3eb3-1abf-4b9a-bf87-b8195222c534" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</body>
+</html>

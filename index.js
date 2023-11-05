@@ -4,7 +4,9 @@ const cors = require('cors')
 // const admin = require('firebase-admin')
 const { initializeApp } = require('firebase/app')
 const { getDatabase, set, update, remove, ref, query, orderByChild, equalTo, get } = require('firebase/database')
-const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage')
+// const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage')
+const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
+
 const multer = require('multer')
 const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
@@ -82,8 +84,8 @@ const sound4detail = multer({
     },
     filename: function (req, file, cb) {
       const currentDate = new Date();
-      const formattedDate = currentDate.getFullYear().toString() + 
-        ('0' + (currentDate.getMonth() + 1)).slice(-2) + 
+      const formattedDate = currentDate.getFullYear().toString() +
+        ('0' + (currentDate.getMonth() + 1)).slice(-2) +
         ('0' + currentDate.getDate()).slice(-2)
       cb(null, Date.now() + "-" + formattedDate + '-testerSound' + path.extname(file.originalname))
     }
@@ -506,16 +508,26 @@ app.post("/model", file2model.single('file'), async (req, res) => {
     const soundFile = req.file
     await console.log('Sound file:', soundFile)
 
+    try {
+      const storage = getStorage(firebase)
+      const storagePath = 'modelUsingHistory/' + file.filename
+      const storageReference = storageRef(storage, storagePath)
+      await uploadBytes(storageReference, fs.readFileSync(file.path))
+      const downloadURL = await getDownloadURL(storageReference)
+      console.log("Upload Successfully. Download file link:", downloadURL)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+    }
+
     const modelFile = 'Predict.py'
     let predicted = ''
 
     if (!soundFile) { return res.status(400).send("File not Found") }
-    
-    console.log("Model Activate")
+
     const model = await spawn('python', [__dirname + "/model/" + modelFile])
 
     model.stdout.on('data', function (data) {
-      console.log("Data:", data.toString() ,"Update")
+      console.log("Data:", data.toString(), "Update")
       predicted = data.toString()
     })
 
@@ -524,7 +536,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
         console.log(`Python script exited with code ${code}`)
         return res.status(500).send(`Python script exited with code ${code}`)
       }
-      console.log("Model Predicted is:", predicted)
+      console.log("Predict.py Return:", predicted)
       return res.status(200).send(predicted)
     })
   } catch (error) {
@@ -540,7 +552,7 @@ app.get("/listfile", async (req, res) => {
   let searchPath = __dirname
   let output = ""
   console.log(searchPath)
-  if(reqPath){
+  if (reqPath) {
     searchPath = searchPath + reqPath
   }
   const path = __dirname
@@ -548,9 +560,9 @@ app.get("/listfile", async (req, res) => {
   console.log(searchPath)
   await listFilesInPath(searchPath, (err, fileList) => {
     if (err) {
-      res.status(500).send({searchPath, Response: "Path Error"})
+      res.status(500).send({ searchPath, Response: "Path Error" })
     } else {
-      res.status(200).send({searchPath, fileList})
+      res.status(200).send({ searchPath, fileList })
     }
   })
   // res.send(searchPath)
@@ -558,7 +570,7 @@ app.get("/listfile", async (req, res) => {
 
 app.get("/download", (req, res) => {
   const { filepath } = req.body
-  if(!filepath){ return res.status(400).send("No file path") }
+  if (!filepath) { return res.status(400).send("No file path") }
   const targetFile = __dirname + "/" + filepath
   console.log(targetFile)
   res.download(targetFile)
@@ -590,9 +602,59 @@ app.post("/soundcheck", sound4detail.single('file'), async (req, res) => {
 
 app.post("/mimetype", sound4detail.single('file'), async (req, res) => {
   const file = req.file
-  console.log(file)
-  res.status(200).send(file)
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded or empty file' });
+  }
+
+  const storage = getStorage(firebase)
+  const storagePath = 'fileTemp/' + file.filename
+  const storageReference = storageRef(storage, storagePath)
+  try {
+    await uploadBytes(storageReference, fs.readFileSync(file.path))
+    const downloadURL = await getDownloadURL(storageReference)
+    console.log(file)
+    return res.status(200).json({ file, downloadURL: downloadURL })
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    return res.status(500).json({ error: 'Error uploading file' })
+  }
+
 })
+
+app.post('/testupload', uploadFile.single('file'), async (req, res) => {
+  console.log("upload activated")
+  try {
+    const file = req.file;
+    console.log(file)
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded or empty file' });
+    }
+
+    // เข้าถึง Storage ใน Firebase
+    const storage = getStorage(firebase);
+
+    // กำหนด path ใน Storage ที่คุณต้องการเก็บไฟล์
+    const storagePath = 'files/' + file.filename;
+
+    // สร้าง reference ใน Storage
+    const storageReference = storageRef(storage, storagePath);
+
+    // อัปโหลดไฟล์
+    await uploadBytes(storageReference, fs.readFileSync(file.path))
+    const downloadURL = await getDownloadURL(storageReference)
+
+    return res.status(200).send({
+      status: "File uploaded successfully",
+      filename: file.filename,
+      mimetype: file.mimetype,
+      downloadURL: downloadURL
+    })
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    res.status(500).json({ error: 'Error uploading file' })
+  }
+})
+
 
 //-----------------------------------------------------------
 
