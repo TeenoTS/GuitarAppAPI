@@ -510,7 +510,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
 
     try {
       const storage = getStorage(firebase)
-      const storagePath = 'modelUsingHistory/' + soundFile.filename
+      const storagePath = 'modelUsingHistory/' + Date.now() + "-" + soundFile.filename
       const storageReference = storageRef(storage, storagePath)
       await uploadBytes(storageReference, fs.readFileSync(soundFile.path))
       const downloadURL = await getDownloadURL(storageReference)
@@ -527,7 +527,7 @@ app.post("/model", file2model.single('file'), async (req, res) => {
     const model = await spawn('python', [__dirname + "/model/" + modelFile])
 
     model.stdout.on('data', function (data) {
-      console.log("Data:", data.toString(), "Update")
+      // console.log("Data:", data.toString(), "Update")
       predicted = data.toString()
     })
 
