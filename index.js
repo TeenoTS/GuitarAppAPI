@@ -209,10 +209,13 @@ app.post("/user", async (req, res) => {
         details: "Required data: name, email, password"
       })
     }
+    var currentDate = new Date(Date.now())
+    var options = { year: 'numeric', month: 'long', day: 'numeric' }
+    var formattedDate = new Intl.DateTimeFormat('en-US', options).format(currentDate)
 
     const userRef = ref(database, "user");
     const emailQuery = query(userRef, orderByChild("email"), equalTo(email))
-
+    
     get(emailQuery)
       .then(async (snapshot) => {
         //console.log("emailQuery: " + emailQuery)
@@ -244,6 +247,7 @@ app.post("/user", async (req, res) => {
               intermediate: 0,
               advance: 0
             },
+            joined_date: formattedDate,
             profile_img: "https://firebasestorage.googleapis.com/v0/b/gt-app-c27ea.appspot.com/o/images%2Fblank_profile.png?alt=media&token=dc85a143-b09c-404a-a0c4-da52b41a12f2"
           })
             .then((result) => {
@@ -382,12 +386,10 @@ app.get("/profile-img/:token", (req, res) => {
 
 app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
   try {
-    console.log("profile-img Actived")
-    console.log("data get:", req.body)
     const { token } = req.body
-    const file = req.file;
-    console.log(token)
-    console.log(file)
+    const file = req.file
+    // console.log(token)
+    // console.log(file)
     if (!token) {
       return res.status(401).send({
         status: "Authentication error",
@@ -398,15 +400,9 @@ app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded or empty file' });
     }
 
-    const storage = getStorage(firebase);
-
-    // กำหนด path ใน Storage ที่คุณต้องการเก็บไฟล์
-    const storagePath = 'images/' + file.filename;
-
-    // สร้าง reference ใน Storage
-    const storageReference = storageRef(storage, storagePath);
-
-    // อัปโหลดไฟล์
+    const storage = getStorage(firebase)
+    const storagePath = 'images/' + file.filename
+    const storageReference = storageRef(storage, storagePath)
     await uploadBytes(storageReference, fs.readFileSync(file.path))
     const downloadURL = await getDownloadURL(storageReference)
 
