@@ -341,12 +341,57 @@ app.put("/user", (req, res) => {
   }
 })
 
+app.get("/profile-img/:token", (req, res) => {
+  const token = req.params.token
+  if (!token) {
+    return res.status(401).send({
+      status: "Authentication error",
+      detail: "No token or token invalid"
+    })
+  } else {
+    try {
+      const token_data = jwtdecoder(token)
+      const userRef = ref(database, "user");
+      const emailQuery = query(userRef, orderByChild("email"), equalTo(token_data.email));
+
+      get(emailQuery)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const user = snapshot.val()
+            //console.log("emailQuery: " + emailQuery)
+            console.log("snapshot: ", user)
+            const userData = Object.values(user).find(user => user.email === token_data.email)
+
+            return res.status(200).send( userData.profile_img )
+          }
+          else {
+            return res.status(401).send({
+              status: "Authentication Failed",
+              detail: "Email not exists"
+            })
+          }
+        })
+    } catch (err) {
+      return res.status(401).send({
+        status: "Authentication error",
+        detail: "No token or token invalid"
+      })
+    }
+  }
+})
+
 app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
   try {
     const { token } = req.body
     const file = req.file;
     console.log(token)
     console.log(file)
+    if (!token) {
+      return res.status(401).send({
+        status: "Authentication error",
+        detail: "No token or token invalid"
+      })
+    }
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded or empty file' });
     }
@@ -376,6 +421,17 @@ app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
             //console.log("snapshot: ", user)
             const userData = Object.values(user).find(user => user.email === token_data.email)
             console.log(userData)
+
+            set(ref(database, 'user/' + token_data.name), {
+              email: userData.email,
+              id: userData.id,
+              listening_chord: userData.listening_chord,
+              memorize_chord: userData.memorize_chord,
+              name: userData.name,
+              password: userData.password,
+              playing_chord: userData.playing_chord,
+              profile_img: downloadURL
+            })
             // set(ref(database, 'user/' + token_data.name + '/' + mode), {
             //   beginner: score,
             //   intermediate: userData[mode].intermediate,
