@@ -243,7 +243,8 @@ app.post("/user", async (req, res) => {
               beginner: 0,
               intermediate: 0,
               advance: 0
-            }
+            },
+            profile_img: "https://firebasestorage.googleapis.com/v0/b/gt-app-c27ea.appspot.com/o/images%2Fblank_profile.png?alt=media&token=dc85a143-b09c-404a-a0c4-da52b41a12f2"
           })
             .then((result) => {
               return res.status(200).send({
@@ -337,6 +338,38 @@ app.put("/user", (req, res) => {
       status: "API Error",
       details: "Unknown Error"
     })
+  }
+})
+
+app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    console.log(file)
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded or empty file' });
+    }
+
+    const storage = getStorage(firebase);
+
+    // กำหนด path ใน Storage ที่คุณต้องการเก็บไฟล์
+    const storagePath = 'images/' + file.filename;
+
+    // สร้าง reference ใน Storage
+    const storageReference = storageRef(storage, storagePath);
+
+    // อัปโหลดไฟล์
+    await uploadBytes(storageReference, fs.readFileSync(file.path))
+    const downloadURL = await getDownloadURL(storageReference)
+
+    return res.status(200).send({
+      status: "File uploaded successfully",
+      filename: file.filename,
+      mimetype: file.mimetype,
+      downloadURL: downloadURL
+    })
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    res.status(500).json({ error: 'Error uploading file' })
   }
 })
 
@@ -654,7 +687,6 @@ app.post('/testupload', uploadFile.single('file'), async (req, res) => {
     res.status(500).json({ error: 'Error uploading file' })
   }
 })
-
 
 //-----------------------------------------------------------
 
