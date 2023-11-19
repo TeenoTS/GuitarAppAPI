@@ -343,7 +343,9 @@ app.put("/user", (req, res) => {
 
 app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
   try {
+    const { token } = req.body
     const file = req.file;
+    console.log(token)
     console.log(file)
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded or empty file' });
@@ -361,12 +363,51 @@ app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
     await uploadBytes(storageReference, fs.readFileSync(file.path))
     const downloadURL = await getDownloadURL(storageReference)
 
-    return res.status(200).send({
-      status: "File uploaded successfully",
-      filename: file.filename,
-      mimetype: file.mimetype,
-      downloadURL: downloadURL
-    })
+    try {
+      const token_data = jwtdecoder(token)
+      const userRef = ref(database, "user");
+      const emailQuery = query(userRef, orderByChild("email"), equalTo(token_data.email));
+  
+      get(emailQuery)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const user = snapshot.val()
+            //console.log("emailQuery: " + emailQuery)
+            //console.log("snapshot: ", user)
+            const userData = Object.values(user).find(user => user.email === token_data.email)
+            console.log(userData)
+            // set(ref(database, 'user/' + token_data.name + '/' + mode), {
+            //   beginner: score,
+            //   intermediate: userData[mode].intermediate,
+            //   advance: userData[mode].advance,
+            // })
+            
+            return res.status(200).send({
+              status: "Success",
+              details: "-"
+            })
+          } else {
+            return res.status(401).send({
+              status: "Authentication Failed",
+              detail: "Email not exists"
+            })
+          }
+        })
+  
+    } catch (err) {
+      console.log(err)
+      return res.status(500).send({
+        status: "API Error",
+        details: "Unknown Error"
+      })
+    }
+
+    // return res.status(200).send({
+    //   status: "File uploaded successfully",
+    //   filename: file.filename,
+    //   mimetype: file.mimetype,
+    //   downloadURL: downloadURL
+    // })
   } catch (error) {
     console.error('Error uploading file:', error)
     res.status(500).json({ error: 'Error uploading file' })
