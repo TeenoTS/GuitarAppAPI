@@ -382,6 +382,8 @@ app.get("/profile-img/:token", (req, res) => {
 
 app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
   try {
+    console.log("profile-img Actived")
+    console.log("data get:", req.body)
     const { token } = req.body
     const file = req.file;
     console.log(token)
