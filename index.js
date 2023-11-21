@@ -14,8 +14,8 @@ const jwtdecoder = require('jwt-decode')
 const mime = require('mime')
 const fs = require('fs')
 const { spawn, exec } = require('child_process')
-const path = require('path');
-const { profile } = require('console');
+const path = require('path')
+const bcrypt = require('bcrypt')
 
 const app = express()
 const PORT = 8080
@@ -210,6 +210,7 @@ app.post("/user", async (req, res) => {
         details: "Required data: name, email, password"
       })
     }
+    encryptedPassword = await bcrypt.hash(password, 10)
     var currentDate = new Date(Date.now())
     var options = { year: 'numeric', month: 'long', day: 'numeric' }
     var formattedDate = new Intl.DateTimeFormat('en-US', options).format(currentDate)
@@ -232,7 +233,7 @@ app.post("/user", async (req, res) => {
             id: id,
             name: name,
             email: email,
-            password: password,
+            password: encryptedPassword,
             memorize_chord: {
               beginner: 0,
               intermediate: 0,
@@ -485,14 +486,14 @@ app.post("/login", (req, res) => {
     const emailQuery = query(userRef, orderByChild("email"), equalTo(email));
 
     get(emailQuery)
-      .then((snapshot) => {
+      .then(async (snapshot) => {
         if (snapshot.exists()) {
           const user = snapshot.val()
           //console.log("emailQuery: " + emailQuery)
           console.log("snapshot: ", user)
           const userData = Object.values(user).find(user => user.email === email)
           console.log("user data: ", userData)
-          if (userData.password != password) {
+          if (!(await bcrypt.compare(password, userData.password))) {
             return res.status(401).send({
               status: "Authentication Failed",
               detail: "Password incorrect"
