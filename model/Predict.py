@@ -8,9 +8,6 @@ try:
     # from pathlib import Path
     from moviepy.editor import *
 
-    sys.stdout = open(os.devnull, 'w')
-    sys.stderr = open(os.devnull, 'w')
-
     dirname = os.path.dirname(os.path.abspath(__file__))
 
     # chord_name = ['A(MINOR)', 'A(MAJOR)', 'C(MAJOR)', 'B(MINOR)', 'Bb(MINOR)', 'B(MAJOR)', 'C(MINOR)', 'C#(MINOR)', 'Bb(MAJOR)', 'C#(MAJOR)', 'E(MINOR)', 'D(MAJOR)', 'F(MAJOR)', 'F(MINOR)', 'D#(MAJOR)', 'E(MAJOR)', 'F#(MINOR)', 'F#(MAJOR)', 'D#(MINOR)', 'D(MINOR)', 'G#(MINOR)', 'G#(MAJOR)', 'G(MAJOR)', 'G(MINOR)']
@@ -67,6 +64,8 @@ try:
     # Test Path
     # path = 'D:\\Music\\Dataset\\Guitar Chord Dataset V2\\Chord Gm\\Gm (G form AC2) Pick.wav'
     if os.path.exists(file_path):
+        original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
         # completed_process = subprocess.run(['ffmpeg', '-i', normalized_file_path, '-acodec', 'pcm_s16le', '-ac', '1', normalized_converted_file_path], check=True, stderr=subprocess.PIPE)
         audio = AudioFileClip(file_path)
         audio.write_audiofile(converted_file_path, codec='pcm_s16le')
@@ -74,8 +73,10 @@ try:
             sound_feature = feature2model(converted_file_path)
             model_ansPredicted = model.predict(sound_feature[None,:,:,None]).argmax()
             # print('Model Answer:', chord_name[model_ansPredicted], '['+str(model_ansPredicted)+']')
+            sys.stdout = original_stdout
             print(chord_name[model_ansPredicted])
         else:
+            sys.stdout = original_stdout
             print("Conversion failed. The converted file does not exist.")
 
     else:
