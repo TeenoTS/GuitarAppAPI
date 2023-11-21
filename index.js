@@ -571,21 +571,21 @@ app.post("/score/:mode/:difficulty", (req, res) => {
           //console.log("snapshot: ", user)
           const userData = Object.values(user).find(user => user.email === token_data.email)
 
-          if (difficulty == "beginner") {
+          if (difficulty == "beginner" && score > userData[mode].beginner) {
             set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: score,
               intermediate: userData[mode].intermediate,
               advance: userData[mode].advance,
             })
           }
-          else if (difficulty == "intermediate") {
+          else if (difficulty == "intermediate" && score > userData[mode].intermediate) {
             set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: userData[mode].beginner,
               intermediate: score,
               advance: userData[mode].advance,
             })
           }
-          else if (difficulty == "advance") {
+          else if (difficulty == "advance" && score > userData[mode].advance) {
             set(ref(database, 'user/' + token_data.name + '/' + mode), {
               beginner: userData[mode].beginner,
               intermediate: userData[mode].intermediate,
