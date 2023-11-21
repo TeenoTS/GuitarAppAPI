@@ -1,11 +1,15 @@
 
 try: 
     import os
+    import sys
     import tensorflow as tf
     import librosa
     import numpy as np
     # from pathlib import Path
     from moviepy.editor import *
+
+    sys.stdout = open(os.devnull, 'w')
+    sys.stderr = open(os.devnull, 'w')
 
     dirname = os.path.dirname(os.path.abspath(__file__))
 
