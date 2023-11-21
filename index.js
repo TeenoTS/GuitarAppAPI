@@ -14,7 +14,8 @@ const jwtdecoder = require('jwt-decode')
 const mime = require('mime')
 const fs = require('fs')
 const { spawn, exec } = require('child_process')
-const path = require('path')
+const path = require('path');
+const { profile } = require('console');
 
 const app = express()
 const PORT = 8080
@@ -303,7 +304,9 @@ app.put("/user", (req, res) => {
             password: userData.password,
             memorize_chord: userData.memorize_chord,
             listening_chord: userData.listening_chord,
-            playing_chord: userData.playing_chord
+            playing_chord: userData.playing_chord,
+            joined_date: userData.joined_date,
+            profile_img: userData.profile_img
           })
             .then((result) => {
               remove(ref(database, 'user/' + userData.name))
@@ -428,7 +431,8 @@ app.post("/profile-img", uploadFile.single('file'), async (req, res) => {
               name: userData.name,
               password: userData.password,
               playing_chord: userData.playing_chord,
-              profile_img: downloadURL
+              profile_img: downloadURL,
+              joined_date: userData.joined_date
             })
             // set(ref(database, 'user/' + token_data.name + '/' + mode), {
             //   beginner: score,
