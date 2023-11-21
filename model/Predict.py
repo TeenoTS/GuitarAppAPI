@@ -9,9 +9,24 @@ try:
 
     dirname = os.path.dirname(os.path.abspath(__file__))
 
-    chord_name = ['A(MINOR)', 'A(MAJOR)', 'C(MAJOR)', 'B(MINOR)', 'Bb(MINOR)', 'B(MAJOR)', 'C(MINOR)', 'C#(MINOR)', 'Bb(MAJOR)', 'C#(MAJOR)', 'E(MINOR)', 'D(MAJOR)', 'F(MAJOR)', 'F(MINOR)', 'D#(MAJOR)', 'E(MAJOR)', 'F#(MINOR)', 'F#(MAJOR)', 'D#(MINOR)', 'D(MINOR)', 'G#(MINOR)', 'G#(MAJOR)', 'G(MAJOR)', 'G(MINOR)']
-    # model = tf.keras.models.load_model(dirname + '\Guitar_Trainer_Model_V0.20.h5')
-    model = tf.keras.models.load_model(dirname + '/Guitar_Trainer_Model_V0.20.h5')
+    # chord_name = ['A(MINOR)', 'A(MAJOR)', 'C(MAJOR)', 'B(MINOR)', 'Bb(MINOR)', 'B(MAJOR)', 'C(MINOR)', 'C#(MINOR)', 'Bb(MAJOR)', 'C#(MAJOR)', 'E(MINOR)', 'D(MAJOR)', 'F(MAJOR)', 'F(MINOR)', 'D#(MAJOR)', 'E(MAJOR)', 'F#(MINOR)', 'F#(MAJOR)', 'D#(MINOR)', 'D(MINOR)', 'G#(MINOR)', 'G#(MAJOR)', 'G(MAJOR)', 'G(MINOR)']
+    chord_name = [
+    'C(MAJOR)', 'C(MINOR)',
+    'C#(MAJOR)', 'C#(MINOR)',
+    'D(MAJOR)', 'D(MINOR)',
+    'D#(MAJOR)', 'D#(MINOR)',
+    'E(MAJOR)', 'E(MINOR)',
+    'F(MAJOR)', 'F(MINOR)',
+    'F#(MAJOR)', 'F#(MINOR)',
+    'G(MAJOR)', 'G(MINOR)',
+    'G#(MAJOR)', 'G#(MINOR)',
+    'A(MAJOR)', 'A(MINOR)',
+    'Bb(MAJOR)', 'Bb(MINOR)',
+    'B(MAJOR)', 'B(MINOR)',
+    ]
+    
+    # model = tf.keras.models.load_model(dirname + '\Guitar_Trainer_Model_V0.30(4 Featured).h5')
+    model = tf.keras.models.load_model(dirname + '/Guitar_Trainer_Model_V0.30(4 Featured).h5')
     
     def time_series_resize(data, target_length = 173):
         data_size = data.shape[1]
@@ -26,12 +41,18 @@ try:
 
     def feature2model(file_path):
         audio_data, sample_rate = librosa.load(file_path)
+
         chromagram = librosa.feature.chroma_stft(y=audio_data, sr=sample_rate)
-        tonnetz = librosa.feature.tonnetz(y=audio_data, sr=sample_rate)
-        chromagram_resize = time_series_resize(chromagram)
-        tonnetz_resize = time_series_resize(tonnetz)
+        melspectrogram = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
+        spectral_contrast = librosa.feature.spectral_contrast(y=audio_data, sr=sample_rate)
+        spectral_centroid = librosa.feature.spectral_centroid(y=audio_data, sr=sample_rate)
+
+        chromagram = time_series_resize(chromagram)
+        melspectrogram = time_series_resize(melspectrogram)
+        spectral_contrast = time_series_resize(spectral_contrast)
+        spectral_centroid = time_series_resize(spectral_centroid)
         # print("After resize:", chromagram_resize, chromagram_resize)
-        feature_combine = np.concatenate((chromagram_resize, tonnetz_resize), axis=0)
+        feature_combine = np.concatenate((chromagram, melspectrogram, spectral_contrast, spectral_centroid), axis=0)
         return feature_combine
 
     # Used Path
