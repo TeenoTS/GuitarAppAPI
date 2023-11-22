@@ -74,7 +74,7 @@ try:
             model_ansPredicted = model.predict(sound_feature[None,:,:,None]).argmax()
             # print('Model Answer:', chord_name[model_ansPredicted], '['+str(model_ansPredicted)+']')
             sys.stdout = original_stdout
-            print(chord_name[model_ansPredicted])
+            print(chord_name[model_ansPredicted], end='')
         else:
             sys.stdout = original_stdout
             print("Conversion failed. The converted file does not exist.")
