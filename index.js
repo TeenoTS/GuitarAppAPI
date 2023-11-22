@@ -631,7 +631,7 @@ app.get('/runpy', async (req, res) => {
       return res.status(500).send(`Python script exited with code ${code}`)
     }
     // console.log('Data received from script')
-    return res.status(200).send(dataToSend)
+    return res.status(200).send(String(dataToSend))
   })
 })
 
